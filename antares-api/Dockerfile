@@ -1,6 +1,6 @@
 # --- STAGE 1: Build ---
 # Utilisation d'une image JDK complète pour la compilation avec Maven
-FROM eclipse-temurin:21-jdk AS builder
+FROM eclipse-temurin:25-jdk AS builder
 
 # Argument pour le cache Maven, utilisé par la commande RUN --mount
 ARG MAVEN_OPTS="-Dmaven.repo.local=/root/.m2/repository"
@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw clean install -DskipTests
 
 # --- STAGE 2: Runtime ---
 # Utilisation d'une image JRE minimale et sécurisée pour l'exécution
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 
 WORKDIR /app
 
