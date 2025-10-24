@@ -9,9 +9,6 @@ on:
 
 env:
   JWT_SECRET: ${{ secrets.JWT_SECRET || 'dummy-secret-for-ci' }}
-  # Option flags (override in repo secrets if you want)
-  BUILD_IMAGES: 'false'   # set 'true' to build images in CI
-  PUSH_IMAGES: 'false'    # set 'true' + configure DOCKER_REGISTRY secrets to push
 
 jobs:
   # --- JOB 1: Build et test du Frontend ---
@@ -72,39 +69,3 @@ jobs:
         run: |
           chmod +x ./mvnw
           ./mvnw -B verify
-
-  # --- JOB 3: Build et Push des images Docker (après le succès des tests) ---
-  build-and-push-docker:
-    # Ce job ne démarre que si les deux jobs précédents réussissent
-    needs: [ build-frontend, build-backend ]
-    # Et seulement si le flag BUILD_IMAGES est activé
-    if: env.BUILD_IMAGES == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v5
-
-      - name: Build docker images
-        run: |
-          docker build -t antares-api:ci ./antares-api
-          docker build -t antares-app-nginx:ci ./antares-app
-
-      # Recommandation : Utiliser l'action officielle pour le login
-      - name: Log in to Docker Registry
-        if: env.PUSH_IMAGES == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Tag and Push docker images
-        if: env.PUSH_IMAGES == 'true'
-        env:
-          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-        run: |
-          docker tag antares-api:ci ${DOCKER_REGISTRY}/antares-api:ci
-          docker tag antares-app-nginx:ci ${DOCKER_REGISTRY}/antares-app-nginx:ci
-          
-          docker push ${DOCKER_REGISTRY}/antares-api:ci
-          docker push ${DOCKER_REGISTRY}/antares-app-nginx:ci
