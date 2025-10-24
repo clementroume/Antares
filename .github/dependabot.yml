@@ -5,12 +5,28 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      # Group all org.apache.commons dependencies together
+      apache-commons:
+        patterns:
+          - "org.apache.commons:*"
+      # Group Spring Boot dependencies
+      spring-boot:
+        patterns:
+          - "org.springframework.boot:*"
 
   - package-ecosystem: "npm"
     directory: "/antares-app"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      # Group Angular, Angular CLI, and TypeScript updates together
+      angular-dependencies:
+        patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+          - "typescript"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -22,3 +38,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      # Group all GitHub Actions updates into a single PR
+      github-actions:
+        patterns:
+          - "*"
