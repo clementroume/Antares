@@ -29,10 +29,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+  private final JwtAuthFilter jwtAuthFilter;
   @Value("${cors.allowed-origins}")
   private String allowedOrigins;
-
-  private final JwtAuthFilter jwtAuthFilter;
 
   /**
    * Configures the primary security filter chain that applies to all incoming HTTP requests. This
@@ -81,7 +80,7 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
 
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(List.of(allowedOrigins));
+    configuration.setAllowedOrigins(List.of(this.allowedOrigins));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
     configuration.setAllowCredentials(true);

@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw dependency:go-offline
 COPY src ./src
 
 # 4. Compiler et packager l'application, en sautant les tests qui devraient être faits en CI/CD
-RUN --mount=type=cache,target=/root/.m2 ./mvnw clean install -DskipTests
+RUN --mount=type=cache,target=/root/.m2 ./mvnw clean package -DskipTests
 
 # --- STAGE 2: Runtime ---
 # Utilisation d'une image JRE minimale et sécurisée pour l'exécution
