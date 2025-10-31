@@ -43,7 +43,7 @@ RUN groupadd --gid 1001 appgroup && \
     chown -R appuser:appgroup /app /app/logs
 
 # Copy the built JAR from the 'builder' stage.
-COPY --from=builder /app/target/antares-api-*.jar app.jar
+COPY --from=builder /app/target/antares-admin-*.jar app.jar
 
 # Ensure the final 'app.jar' is owned by the non-root user
 RUN chown appuser:appgroup app.jar
@@ -51,9 +51,8 @@ RUN chown appuser:appgroup app.jar
 # Switch to the non-root user
 USER appuser
 
-# Expose the application ports
-EXPOSE 8080
-EXPOSE 9090
+# Expose the application port
+EXPOSE 9091
 
 # Set the entrypoint to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,26 @@
+# Ignore dependencies (they are installed by 'npm ci' in the container)
+node_modules/
+
+# Ignore local debug logs
+npm-debug.log*
+
+# Ignore build output (it's generated inside the container)
+dist/
+.angular/
+
+# Ignore local IDE files and directories
+.idea/
+.vscode/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore environment files that might contain secrets
+# (use .env in docker-compose.yml instead)
+.env
+.env.*.local

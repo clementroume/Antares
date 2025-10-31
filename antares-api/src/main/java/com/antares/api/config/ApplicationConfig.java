@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
+import org.springframework.boot.actuate.web.exchanges.InMemoryHttpExchangeRepository;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -112,5 +114,14 @@ public class ApplicationConfig {
         log.info("Default admin user created with email: {}", adminEmail);
       }
     };
+  }
+
+  /**
+   * Enables HTTP request tracing for the "httpexchanges" Actuator endpoint. The Spring Boot Admin
+   * UI will display it in the "Traces" tab.
+   */
+  @Bean
+  public HttpExchangeRepository httpExchangeRepository() {
+    return new InMemoryHttpExchangeRepository();
   }
 }

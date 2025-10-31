@@ -30,6 +30,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private final JwtAuthFilter jwtAuthFilter;
+
   @Value("${cors.allowed-origins}")
   private String allowedOrigins;
 
@@ -52,13 +53,12 @@ public class SecurityConfig {
             csrf ->
                 csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(requestHandler)
-                    .ignoringRequestMatchers("/api/v1/auth/**"))
+                    .ignoringRequestMatchers("/api/v1/auth/**", "/actuator/**"))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers(
-                        "/actuator/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+                auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
                     .hasRole("ADMIN")
-                    .requestMatchers("/api/v1/auth/**")
+                    .requestMatchers("/api/v1/auth/**", "/actuator/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
