@@ -82,4 +82,4 @@ test.http
 *.tar.gz
 *.rar
 package-lock.json
-/nginx/
+/certs/

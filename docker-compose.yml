@@ -1,22 +1,105 @@
 services:
-  # --- Postgres Database Service ---
+  traefik:
+    image: traefik:v3.5
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8081:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - antares-net
+    restart: unless-stopped
+
+  # --- 2. THE ANGULAR FRONTEND (SERVED BY NGINX) ---
+  antares-app:
+    build:
+      context: ./antares-app
+      dockerfile: Dockerfile
+    image: antares-app:latest
+    container_name: antares-app
+    restart: unless-stopped
+    networks:
+      - antares-net
+    depends_on:
+      - antares-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.antares-app-router.rule=Host(`antares.local`)"
+      - "traefik.http.routers.antares-app-router.service=antares-app-svc"
+      - "traefik.http.routers.antares-app-router.priority=5"
+      - "traefik.http.services.antares-app-svc.loadbalancer.server.port=80"
+
+  # --- 3. THE CORE SPRING BOOT API (AUTH & USERS) ---
+  antares-api:
+    build:
+      context: ./antares-api
+      dockerfile: Dockerfile
+    image: antares-api:latest
+    container_name: antares-api
+    env_file: ./.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - antares-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.antares-api-svc.loadbalancer.server.port=8080"
+
+      # Frontend API Proxy
+      - "traefik.http.routers.antares-api-proxy.rule=Host(`antares.local`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.antares-api-proxy.priority=10"
+      - "traefik.http.routers.antares-api-proxy.service=antares-api-svc"
+
+      # Dedicated API Access
+      - "traefik.http.routers.antares-api-dedicated.rule=Host(`api.antares.local`)"
+      - "traefik.http.routers.antares-api-dedicated.service=antares-api-svc"
+
+      # --- 3. NOUVEAU: Router pour Swagger (sur le domaine principal) ---
+      - "traefik.http.routers.antares-swagger.rule=Host(`antares.local`) && (PathPrefix(`/swagger-ui`) || PathPrefix(`/v3/api-docs`))"
+      - "traefik.http.routers.antares-swagger.priority=10"
+      - "traefik.http.routers.antares-swagger.service=antares-api-svc"
+
+  # --- 4. THE SPRING BOOT ADMIN SERVER (MONITORING) ---
+  antares-admin:
+    build:
+      context: ./antares-admin
+      dockerfile: Dockerfile
+    image: antares-admin:latest
+    container_name: antares-admin
+    env_file: ./.env
+    networks:
+      - antares-net
+    depends_on:
+      - antares-api
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.antares-admin-router.rule=Host(`admin.antares.local`)"
+
+  # --- 5. DATA SERVICES (DATABASES & CACHES) ---
   postgres:
     image: postgres:16-alpine
     container_name: antares-postgres
     environment:
-      # Credentials and DB name are loaded from the .env file in the root directory
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
-      # Use a named volume to persist database data across container restarts
       - postgres_data:/var/lib/postgresql/data
     ports:
-      # Map host port 5432 to container port 5432 for external access (e.g., DBeaver)
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     restart: unless-stopped
     healthcheck:
-      # Check if the database is ready to accept connections before other services start
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
@@ -24,19 +107,15 @@ services:
     networks:
       - antares-net
 
-  # --- Redis Cache Service ---
   redis:
     image: redis:7-alpine
     container_name: antares-redis
-    ports:
-      # Map host port 6379 to container port 6379 for external access
-      - "6379:6379"
     volumes:
-      # Use a named volume to persist cache data
       - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
     restart: unless-stopped
     healthcheck:
-      # Check if the redis server is responding to pings
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
@@ -44,75 +123,12 @@ services:
     networks:
       - antares-net
 
-  # --- Backend API (Spring Boot) ---
-  antares-api:
-    build:
-      context: ./antares-api  # Path to the antares-api project directory
-      dockerfile: Dockerfile  # Specifies the Dockerfile to use (our harmonized template)
-    image: antares-api:latest
-    container_name: antares-api
-    env_file:
-      - ./.env # Load environment variables (API keys, DB creds, etc.)
-    depends_on:
-      postgres:
-        condition: service_healthy # Wait for postgres to be healthy before starting
-      redis:
-        condition: service_healthy # Wait for redis to be healthy before starting
-    restart: unless-stopped
-    networks:
-      - antares-net
-
-  # --- Admin Backend (Spring Boot) ---
-  antares-admin:
-    build:
-      context: ./antares-admin # Path to the antares-admin project directory
-      dockerfile: Dockerfile # Also uses the harmonized template
-    image: antares-admin:latest
-    container_name: antares-admin
-    env_file:
-      - ./.env
-    ports:
-      # Expose port 9091 only on the host's localhost interface for security
-      - "127.0.0.1:9091:9091"
-    networks:
-      - antares-net
-    depends_on:
-      - antares-api # This service depends on the main API
-
-  # --- Frontend (Angular + nginx) ---
-  antares-nginx:
-    build:
-      context: ./antares-app  # Path to the antares-app (Angular) project
-      dockerfile: Dockerfile  # Uses the Node/nginx Dockerfile
-    image: antares-app:latest
-    container_name: antares-app
-    ports:
-      # Expose standard web ports to the host
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - antares-api # The frontend needs the API to be available
-    volumes:
-      # Mount SSL certificates from the host (read-only)
-      - ./nginx/certs/cert.crt:/etc/nginx/certs/cert.crt:ro
-      - ./nginx/certs/cert.key:/etc/nginx/certs/cert.key:ro
-      # Mount a host directory to store nginx logs
-      - ./nginx/logs:/var/log/nginx
-    restart: unless-stopped
-    networks:
-      - antares-net
-
-# --- Named Volumes Definition ---
-# These volumes are managed by Docker and allow data to persist
-# even if the containers are removed and recreated.
+# --- VOLUME DEFINITIONS ---
 volumes:
   postgres_data:
   redis_data:
 
-# --- Network Definition ---
-# Define a custom bridge network. This allows services to find
-# each other using their service names (e.g., 'http://antares-api:8080').
+# --- NETWORK DEFINITION ---
 networks:
   antares-net:
     driver: bridge
-
