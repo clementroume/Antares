@@ -1,23 +1,17 @@
-# Antares Project
+# StellarAtlas Project
 
-Antares is a modern, full-stack web application featuring a Spring Boot backend (`antares-api`), an
-Angular frontend (`antares-app`), and a Spring Boot Admin server (`antares-admin`). The entire stack
-is containerized with Docker and served securely via a Traefik reverse proxy.
+StellarAtlas is a modern, full-stack web application featuring a Spring Boot backend (
+`antares-auth`), an Angular frontend (`sirius-app`), and a Spring Boot Admin server (`vega-admin`).
+The entire stack is containerized with Docker and served securely via a Traefik reverse proxy.
 
 ## Tech Stack
 
-- **Backend**: Java 21, Spring Boot 3.5, Spring Security, JWT, Flyway, MapStruct
-
-- **Frontend**: Angular 20, TypeScript, Tailwind CSS 4, DaisyUI 5
-
-- **Database**: PostgreSQL
-
-- **Cache & Sessions**: Redis
-
+- **Backend (Auth)**: Java 21, Spring Boot 3.5, Spring Security, JWT (`antares-auth`)
+- **Backend (Admin)**: Spring Boot Admin (`vega-admin`)
+- **Frontend**: Angular 20, TypeScript, Tailwind CSS 4, DaisyUI 5 (`sirius-app`)
+- **Database**: PostgreSQL (`castor-db`)
+- **Cache & Sessions**: Redis (`pollux-cache`)
 - **Reverse Proxy**: Traefik (handles HTTPS, local domains, rate limiting)
-
-- **Monitoring**: Spring Boot Admin Server
-
 - **Deployment**: Docker & Docker Compose
 
 ## Architecture Overview
@@ -25,31 +19,14 @@ is containerized with Docker and served securely via a Traefik reverse proxy.
 All local traffic is managed by Traefik, which provides a single secure entry point (`https://...`)
 and routes requests to the appropriate service.
 
-```
-(Your Mac)
-    |
-    |  Accesses:
-    |  - [https://antares.local](https://antares.local)      -> [Traefik] -> [antares-app (Nginx)]
-    |  - [https://antares.local/api](https://antares.local/api)  -> [Traefik] -> [antares-api (Spring)]
-    |  - [https://api.antares.local](https://api.antares.local)  -> [Traefik] -> [antares-api (Spring)]
-    |  - [https://admin.antares.local](https://admin.antares.local) -> [Traefik] -> [antares-admin (Spring)]
-    |  - [https://dashboard.antares.local](https://dashboard.antares.local) -> [Traefik] (Internal Dashboard)
-    |
-    |  Direct Access via localhost (for Dev):
-    |  - localhost:5432             -> [antares-postgres]
-    |  - localhost:6379             -> [antares-redis]
-```
+``` (Your Mac) | | Accesses: | - [https://stellar.atlas](https://www.google.com/search?q=https://stellar.atlas "null") -> [Traefik] -> [sirius-app (Nginx)] | - [https://stellar.atlas/api](https://www.google.com/search?q=https://stellar.atlas/api "null") -> [Traefik] -> [antares-auth (Spring)] | - [https://api.stellar.atlas](https://www.google.com/search?q=https://api.stellar.atlas "null") -> [Traefik] -> [antares-auth (Spring)] | - [https://admin.stellar.atlas](https://www.google.com/search?q=https://admin.stellar.atlas "null") -> [Traefik] -> [vega-admin (Spring)] | - [https://dashboard.stellar.atlas](https://www.google.com/search?q=https://dashboard.stellar.atlas "null") -> [Traefik] (Internal Dashboard) | | Direct Access via localhost (for Dev): | - localhost:5432 -> [castor-db] | - localhost:6379 -> [pollux-cache] ```
 
 ## Prerequisites
 
 - [JDK 21](https://adoptium.net/ "null")or newer
-
 - [Node.js 22](https://nodejs.org/ "null")or newer
-
 - [Docker](https://www.docker.com/products/docker-desktop/ "null")& Docker Compose
-
 - `openssl`(usually pre-installed on macOS/Linux)
-
 - `htpasswd`(comes with`apache2-utils`on Linux, or use an online generator)
 
 ## Local Setup
@@ -59,7 +36,7 @@ and routes requests to the appropriate service.
 Create an`.env`file in the project's root directory. This file contains all the sensitive variables
 required to run the application.
 
-```
+```txt
 # === Database Credentials ===
 POSTGRES_DB=antares
 POSTGRES_USER=antares
@@ -73,32 +50,29 @@ REDIS_PASSWORD=your_strong_redis_password
 JWT_SECRET=your_long_and_random_jwt_secret_key
 
 # === Default Admin User Configuration ===
-# Used by both 'antares-api' and 'antares-admin'
+# Used by 'antares-auth' and 'vega-admin'
 ADMIN_FIRSTNAME=Admin
 ADMIN_LASTNAME=User
-ADMIN_EMAIL=admin@antares.local
+ADMIN_EMAIL=admin@stellar.atlas
 ADMIN_PASSWORD=your_strong_admin_password
 
 # === Traefik Dashboard Authentication ===
-# This is the HASH, not the plain text password.
-# 1. Generate it by running: htpasswd -nb "admin@antares.local" "your_strong_admin_password"
-# 2. Take the output (e.g., admin@antares.local:$apr1$...)
-# 3. Add '$$' to escape each '$' (e.g., admin@antares.local:$$apr1$$...)
-TRAEFIK_DASHBOARD_AUTH=your_htpasswd_hash_with_escaped_dollars
+# Generate with 'htpasswd -nb user password', escaping '$' as '$$'
+TRAEFIK_DASHBOARD_AUTH=your_htpasswd_hash_with_escaped_dollars 
 ```
 
 ### 2. Generate Local Certificates
 
 We need self-signed certificates for Traefik to serve HTTPS locally.
 
-```
+```bash
 # Create the certs directory
 mkdir -p certs
 
-# Generate the certificate for *.antares.local
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout certs/local.key -out certs/local.crt \
-  -subj "/CN=*.antares.local"
+# Generate the certificate for *.stellar.atlas
+openssl req -x509 -nodes -days 365 -newkey rsa:2048
+-keyout certs/local.key -out certs/local.crt
+-subj "/CN=*.stellar.atlas"
 ```
 
 ### 3. Update Your Host File
@@ -106,22 +80,20 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 Your computer needs to know that these domains point to your local machine.
 
 - **macOS/Linux**: Edit`/etc/hosts`
-
 - **Windows**: Edit`C:\Windows\System32\drivers\etc\hosts`
 
 Add the following lines:
 
-```
-127.0.0.1       antares.local api.antares.local admin.antares.local dashboard.antares.local
-::1             antares.local api.antares.local admin.antares.local dashboard.antares.local
+``` 
+127.0.0.1 stellar.atlas api.stellar.atlas admin.stellar.atlas dashboard.stellar.atlas 
+::1 stellar.atlas api.stellar.atlas admin.stellar.atlas dashboard.stellar.atlas 
 ```
 
 ### 4. Build and Run Containers
 
-This command will build the API and app images, then start all services (api, app, admin, traefik,
-db, redis).
+This command will build the service images and start all services.
 
-```
+``` bash
 docker compose up --build -d
 ```
 
@@ -130,32 +102,22 @@ docker compose up --build -d
 Your stack is now running. Your browser will show a security warning, which is normal (self-signed
 certificate). You can safely "proceed" or "accept the risk".
 
-- **Main Application**:`https://antares.local`
-
-- **Spring Boot Admin**:`https://admin.antares.local`
-
-- **Traefik Dashboard**:`https://dashboard.antares.local`
-
-- **API (Swagger UI)**:`https://antares.local/swagger-ui.html`
-
-- **API (Dedicated)**:`https://api.antares.local`
+- **Main Application**:`https://stellar.atlas`
+- **Spring Boot Admin**:`https://admin.stellar.atlas`
+- **Traefik Dashboard**:`https://dashboard.stellar.atlas`
+- **API (Swagger UI)**:`https://stellar.atlas/swagger-ui.html`
+- **API (Dedicated)**:`https://api.stellar.atlas`
 
 **Database & Cache Access (Local Development)**
 
 The databases are securely exposed_only_to`localhost`on your host machine.
 
-- **PostgreSQL**:
-
+- **PostgreSQL (`castor-db`)**:
     - **Host**:`127.0.0.1`
-
     - **Port**:`5432`
-
     - **User/Password**: (from your`.env`)
 
-- **Redis**:
-
+- **Redis (`pollux-cache`)**:
     - **Host**:`127.0.0.1`
-
     - **Port**:`6379`
-
     - **Password**: (from your`.env`)
