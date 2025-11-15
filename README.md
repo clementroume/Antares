@@ -19,7 +19,20 @@ The entire stack is containerized with Docker and served securely via a Traefik 
 All local traffic is managed by Traefik, which provides a single secure entry point (`https://...`)
 and routes requests to the appropriate service.
 
-``` (Your Mac) | | Accesses: | - [https://stellar.atlas](https://www.google.com/search?q=https://stellar.atlas "null") -> [Traefik] -> [sirius-app (Nginx)] | - [https://stellar.atlas/api](https://www.google.com/search?q=https://stellar.atlas/api "null") -> [Traefik] -> [antares-auth (Spring)] | - [https://api.stellar.atlas](https://www.google.com/search?q=https://api.stellar.atlas "null") -> [Traefik] -> [antares-auth (Spring)] | - [https://admin.stellar.atlas](https://www.google.com/search?q=https://admin.stellar.atlas "null") -> [Traefik] -> [vega-admin (Spring)] | - [https://dashboard.stellar.atlas](https://www.google.com/search?q=https://dashboard.stellar.atlas "null") -> [Traefik] (Internal Dashboard) | | Direct Access via localhost (for Dev): | - localhost:5432 -> [castor-db] | - localhost:6379 -> [pollux-cache] ```
+``` 
+(Your Mac)
+        |
+        | Accesses:
+        | - https://stellar.atlas            -> [Traefik] -> [sirius-app (Nginx)]
+        | - https://stellar.atlas/api        -> [Traefik] -> [antares-auth (Spring)]
+        | - https://api.stellar.atlas        -> [Traefik] -> [antares-auth (Spring)]
+        | - https://admin.stellar.atlas      -> [Traefik] -> [vega-admin (Spring)]
+        | - https://dashboard.stellar.atlas  -> [Traefik] (Internal Dashboard)
+        |
+        | Direct access via localhost (for development):
+        | - localhost:5432  -> [castor-db]
+        | - localhost:6379  -> [pollux-cache]
+```
 
 ## Prerequisites
 
