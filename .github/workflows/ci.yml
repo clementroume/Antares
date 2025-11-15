@@ -1,4 +1,4 @@
-name: StellarAtlas CI
+name: StellarAtlas CI (monorepo)
 
 on:
   push:
@@ -11,8 +11,35 @@ env:
   JWT_SECRET: ${{ secrets.JWT_SECRET || 'dummy-secret-for-ci' }}
 
 jobs:
-  # --- JOB 1: Build and test the Frontend (Sirius) ---
+  # --- JOB 1: JOBS FILTER ---
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      auth: ${{ steps.filter.outputs.auth }}
+      admin: ${{ steps.filter.outputs.admin }}
+      shared: ${{ steps.filter.outputs.shared }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'sirius-app/**'
+            auth:
+              - 'antares-auth/**'
+            admin:
+              - 'vega-admin/**'
+            shared:
+              - '.github/workflows/ci.yml'
+              - 'docker-compose.yml'
+              - 'dynamic/**'
+
+  # --- JOB 2: Build Frontend (Sirius) ---
   build-frontend:
+    needs: filter
+    if: needs.filter.outputs.frontend == 'true' || needs.filter.outputs.shared == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,8 +69,10 @@ jobs:
         working-directory: ./sirius-app
         run: npm run build -- --configuration production
 
-  # --- JOB 2: Build and test the Auth Backend (Antares) ---
+  # --- JOB 3: Build Auth Backend (Antares) ---
   build-backend-auth:
+    needs: filter
+    if: needs.filter.outputs.auth == 'true' || needs.filter.outputs.shared == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -70,8 +99,10 @@ jobs:
           chmod +x ./mvnw
           ./mvnw -B verify
 
-  # --- JOB 3: Build and test the Admin Backend (Vega) ---
+  # --- JOB 4: Build Admin Backend (Vega) ---
   build-backend-admin:
+    needs: filter
+    if: needs.filter.outputs.admin == 'true' || needs.filter.outputs.shared == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
