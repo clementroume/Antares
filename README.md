@@ -24,7 +24,7 @@ and routes requests to the appropriate service.
         │
         ├─ Public Access
         │  ├─ https://stellar.atlas           → [Traefik] → [sirius-app (Nginx)]
-        │  ├─ https://stellar.atlas/antares   → [Traefik] → [antares-auth (Spring)]
+        │  ├─ https://auth.stellar.atlas      → [Traefik] → [antares-auth (Spring)]
         │  ├─ https://admin.stellar.atlas     → [Traefik] → [vega-admin (Spring)]
         │  └─ https://proxy.stellar.atlas     → [Traefik] (Internal Dashboard)
         │
@@ -116,9 +116,10 @@ certificate). You can safely "proceed" or "accept the risk".
 
 - **Sirius - Angular frontend served by Nginx**:`https://stellar.atlas`
 - **Antares - Auth and Users SpringBoot Api**:`https://auth.stellar.atlas`
-    - **Antares (Swagger UI)**:`https://auth.stellar.atlas/swagger-ui.html`
+    - **Antares (Sirius)**:`https://stellar.atlas/antares`
+    - **Antares (Swagger UI)**:`https://stellar.atlas/swagger-ui.html`
 - **Vega - Admin SpringBoot Server**:`https://admin.stellar.atlas`
-- **Altair - Traefik Dashboard**:`https://dashboard.stellar.atlas`
+- **Altair - Traefik Dashboard**:`https://proxy.stellar.atlas`
 
 **Database & Cache Access (Local Development)**
 

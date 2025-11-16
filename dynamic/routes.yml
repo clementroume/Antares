@@ -57,8 +57,8 @@ http:
       service: "antares-auth-service"           # Route to the 'antares-auth' service.
       middlewares: [ "rate-limit-api" ]         # Apply API rate limiting.
 
-    # --- 3. Antares-Auth Proxy Router ---
-    antares-auth-proxy-router:
+    # --- 3. Antares-Auth Sirius Router ---
+    antares-auth-sirius-router:
       rule: "Host(`stellar.atlas`) && PathPrefix(`/antares`)" # Match 'stellar.atlas/antares...'.
       entryPoints: [ "websecure" ]              # Use the 'websecure' (HTTPS) entrypoint.
       tls: true                                 # Enable TLS (HTTPS).
