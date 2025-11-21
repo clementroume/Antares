@@ -22,11 +22,14 @@ and routes requests to the appropriate service.
 ``` 
 (Your Machine)
         │
-        ├─ Public Access
-        │  ├─ https://stellar.atlas           → [Traefik] → [sirius-app (Nginx)]
-        │  ├─ https://auth.stellar.atlas      → [Traefik] → [antares-auth (Spring)]
-        │  ├─ https://admin.stellar.atlas     → [Traefik] → [vega-admin (Spring)]
-        │  └─ https://proxy.stellar.atlas     → [Traefik] (Internal Dashboard)
+        ├─ Public Access ([https://stellar.atlas](https://stellar.atlas))
+        │  │
+        │  ├─ / (Routes Angular)      → [Traefik] → [sirius-app (Nginx)]
+        │  └─ /antares/* (API)        → [Traefik] → [antares-auth (Spring)]
+        │
+        ├─ Admin Access
+        │  ├─ [https://admin.stellar.atlas](https://admin.stellar.atlas)     → [Traefik] → [vega-admin (Spring)]
+        │  └─ [https://proxy.stellar.atlas](https://proxy.stellar.atlas)     → [Traefik] (Internal Dashboard)
         │
         └─ Direct access (localhost only)
            ├─ localhost:5432  → [castor-db]

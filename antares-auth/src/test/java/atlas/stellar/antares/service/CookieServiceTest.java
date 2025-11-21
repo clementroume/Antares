@@ -52,7 +52,7 @@ class CookieServiceTest {
     assertTrue(cookieHeader.contains("Max-Age=3600"));
     assertTrue(cookieHeader.contains("HttpOnly"));
     assertTrue(cookieHeader.contains("Secure")); // Secure flag is present
-    assertTrue(cookieHeader.contains("SameSite=Lax"));
+    assertTrue(cookieHeader.contains("SameSite=Strict"));
     assertTrue(cookieHeader.contains("Path=/"));
   }
 
